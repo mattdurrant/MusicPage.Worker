@@ -2,7 +2,7 @@ name: Build and Publish Music (Pages)
 
 on:
   schedule:
-    - cron: '12 6 * * *'  # daily at 06:12 UTC (07:12 or 06:12 UK depending on DST)
+    - cron: '12 6 * * *'  # daily 06:12 UTC
   workflow_dispatch:
 
 permissions:
@@ -20,21 +20,37 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - run: dotnet restore
-      - run: dotnet build --configuration Release --no-restore
+      # (optional) quick sanity listing
+      - name: Show repo layout
+        run: |
+          pwd
+          ls -la
+          echo "Projects:"
+          find . -name "*.csproj" -print
+
+      - name: Restore
+        working-directory: ./MusicPage.Worker
+        run: dotnet restore
+
+      - name: Build
+        working-directory: ./MusicPage.Worker
+        run: dotnet build --configuration Release --no-restore
 
       - name: Run music worker
+        working-directory: ./MusicPage.Worker
         env:
           DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
           DROPBOX_APP_SECRET: ${{ secrets.DROPBOX_APP_SECRET }}
           DROPBOX_REFRESH_TOKEN: ${{ secrets.DROPBOX_REFRESH_TOKEN }}
           DROPBOX_FOLDER: '/Public/Tracks'
           OUTPUT_DIR: out
-        run: dotnet run --project MusicPage.Worker/MusicPage.Worker.csproj -c Release
+        run: dotnet run -c Release
 
-      - uses: actions/upload-pages-artifact@v3
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          path: out
+          # because we ran the app inside MusicPage.Worker, "out" is there
+          path: MusicPage.Worker/out
 
   deploy:
     needs: build
