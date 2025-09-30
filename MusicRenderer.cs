@@ -23,7 +23,11 @@ public static class MusicRenderer
 </style>
 </head><body class=""albums-page"">");
 
-        sb.Append("<header><h1>").Append(Html(title)).Append("</h1>");
+
+        sb.Append(@"<header>
+            <div class=""site-nav""><a href=""https://www.mattdurrant.com/"">← Home</a></div>
+            <h1>").Append(Html(title)).Append("</h1>");
+
         if (!string.IsNullOrWhiteSpace(introHtml))
             sb.Append(@"<div class=""blurb"">").Append(introHtml).Append("</div>");
         sb.Append("</header><main>");
